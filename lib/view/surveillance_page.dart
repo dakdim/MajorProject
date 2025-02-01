@@ -94,7 +94,7 @@ class MonitoringPage extends StatelessWidget {
               color: Colors.grey[300],
               child: const Center(
                 child: Text(
-                  'I LOVE YOU',
+                  'hey',
                   style: TextStyle(fontSize: 20, color: Colors.black),
                 ),
               ),
