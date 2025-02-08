@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'surveillance_page.dart'; // Import the SurveillancePage
-import 'livecamera.dart'; // Import the LiveCameraPage
+import 'surveillance_page.dart'; // Import SurveillancePage
+import 'livecamera.dart'; // Import LiveCameraPage
 
 class AddPage extends StatelessWidget {
   const AddPage({Key? key}) : super(key: key);
@@ -14,21 +14,22 @@ class AddPage extends StatelessWidget {
         backgroundColor: const Color.fromRGBO(198, 160, 206, 1),
       ),
       body: Center(
-        // Center the Column
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
-            mainAxisSize:
-                MainAxisSize.min, // Align column height to its content
-            crossAxisAlignment:
-                CrossAxisAlignment.center, // Center buttons horizontally
+            mainAxisSize: MainAxisSize.min, // Align column height to content
+            crossAxisAlignment: CrossAxisAlignment.center, // Center buttons
             children: [
               ElevatedButton(
                 onPressed: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => const SurveillancePage()),
+                      builder: (context) => SurveillancePage(
+                        sessionId: "your_session_id", // Replace dynamically
+                        expectedOtp: "123456", // Replace with OTP from backend
+                      ),
+                    ),
                   );
                 },
                 style: ElevatedButton.styleFrom(
@@ -47,7 +48,8 @@ class AddPage extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => const LiveCameraPage()),
+                      builder: (context) => const LiveCameraPage(),
+                    ),
                   );
                 },
                 style: ElevatedButton.styleFrom(

@@ -1,6 +1,10 @@
+import 'dart:convert';
+import 'dart:math';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:web_socket_channel/status.dart' as status;
 
 class LiveCameraPage extends StatefulWidget {
   const LiveCameraPage({Key? key}) : super(key: key);
@@ -13,45 +17,89 @@ class _LiveCameraPageState extends State<LiveCameraPage> {
   late CameraController _cameraController;
   late Future<void> _initializeControllerFuture;
   bool _isRecording = false;
+  String _otp = "";
+  late WebSocketChannel _channel;
 
   @override
   void initState() {
     super.initState();
     _initializeCamera();
+    _initializeWebSocket();
   }
 
   @override
   void dispose() {
     _cameraController.dispose();
+    _channel.sink.close(status.normalClosure);
     super.dispose();
   }
 
   Future<void> _initializeCamera() async {
-    final cameras = await availableCameras();
-    final firstCamera = cameras.first;
+    try {
+      final cameras = await availableCameras();
+      final firstCamera = cameras.first;
 
-    _cameraController = CameraController(
-      firstCamera,
-      ResolutionPreset.high,
-    );
+      _cameraController = CameraController(
+        firstCamera,
+        ResolutionPreset.max,
+        enableAudio: true,
+      );
 
-    _initializeControllerFuture = _cameraController.initialize();
+      _initializeControllerFuture = _cameraController.initialize();
+      await _initializeControllerFuture;
+
+      _generateOTP();
+      setState(() {});
+    } catch (e) {
+      debugPrint("Error initializing camera: $e");
+    }
+  }
+
+  void _generateOTP() {
+    final random = Random();
+    _otp = (100000 + random.nextInt(900000)).toString();
     setState(() {});
+    _sendOTPToServer(_otp);
+  }
+
+  void _initializeWebSocket() {
+    String sessionId = "12345"; // Replace with actual session ID
+    String serverUrl = "ws://http://127.0.0.1:50645/ws/live-stream/$sessionId/";
+
+    _channel = WebSocketChannel.connect(Uri.parse(serverUrl));
+
+    _channel.stream.listen(
+      (message) {
+        debugPrint("Received WebSocket message: $message");
+      },
+      onError: (error) {
+        debugPrint("WebSocket error: $error");
+      },
+      onDone: () {
+        debugPrint("WebSocket connection closed.");
+      },
+    );
+  }
+
+  void _sendOTPToServer(String otp) {
+    final message = jsonEncode({"type": "otp", "otp": otp});
+    _channel.sink.add(message);
   }
 
   Future<void> _startRecording() async {
-    if (_cameraController.value.isInitialized &&
-        !_cameraController.value.isRecordingVideo) {
+    if (_cameraController.value.isInitialized && !_isRecording) {
       try {
         final directory = await getApplicationDocumentsDirectory();
+        // ignore: unused_local_variable
         final filePath =
             '${directory.path}/live_recording_${DateTime.now().millisecondsSinceEpoch}.mp4';
 
         await _cameraController.startVideoRecording();
-        debugPrint("Recording started and saving to: $filePath");
         setState(() {
           _isRecording = true;
         });
+        debugPrint("Recording started...");
+        _channel.sink.add(jsonEncode({"type": "start_recording"}));
       } catch (e) {
         debugPrint("Error starting recording: $e");
       }
@@ -67,7 +115,9 @@ class _LiveCameraPageState extends State<LiveCameraPage> {
           _isRecording = false;
         });
 
-        // Optionally, you can show a Snackbar or alert with the saved file path
+        _channel.sink.add(
+            jsonEncode({"type": "stop_recording", "file": videoFile.path}));
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Video saved to: ${videoFile.path}")),
         );
@@ -80,61 +130,78 @@ class _LiveCameraPageState extends State<LiveCameraPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Live Camera'),
-        centerTitle: true,
-        backgroundColor: const Color.fromRGBO(198, 160, 206, 1),
-      ),
-      body: Stack(
-        children: [
-          FutureBuilder<void>(
-            future: _initializeControllerFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                // Camera is ready
-                return CameraPreview(_cameraController);
-              } else {
-                // Camera is still loading
-                return const Center(child: CircularProgressIndicator());
-              }
-            },
-          ),
-          Positioned(
-            bottom: 20,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: GestureDetector(
-                onTap: () {
-                  if (_isRecording) {
-                    _stopRecording();
-                  } else {
-                    _startRecording();
-                  }
-                },
+      body: SafeArea(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            FutureBuilder<void>(
+              future: _initializeControllerFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  return CameraPreview(_cameraController);
+                } else {
+                  return const Center(child: CircularProgressIndicator());
+                }
+              },
+            ),
+            Positioned(
+              top: 40,
+              left: 0,
+              right: 0,
+              child: Center(
                 child: Container(
-                  width: 70,
-                  height: 70,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
                   decoration: BoxDecoration(
-                    color: _isRecording
-                        ? Colors.red.withOpacity(0.7)
-                        : Colors.white,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.black,
-                      width: 4,
-                    ),
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(
-                    _isRecording ? Icons.stop : Icons.videocam,
-                    size: 40,
-                    color: _isRecording ? Colors.white : Colors.black,
+                  child: Text(
+                    "OTP: $_otp",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+            Positioned(
+              bottom: 40,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: GestureDetector(
+                  onTap: () {
+                    if (_isRecording) {
+                      _stopRecording();
+                    } else {
+                      _startRecording();
+                    }
+                  },
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: _isRecording ? Colors.red : Colors.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.black,
+                        width: 4,
+                      ),
+                    ),
+                    child: Icon(
+                      _isRecording ? Icons.stop : Icons.videocam,
+                      size: 40,
+                      color: _isRecording ? Colors.white : Colors.black,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

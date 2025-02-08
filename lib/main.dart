@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'view/home.dart'; // Import home.dart
+// import 'dart:ui';
 
 void main() {
   runApp(const MyApp()); // Root widget
@@ -12,7 +13,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
+      title: 'hey,you there?',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
