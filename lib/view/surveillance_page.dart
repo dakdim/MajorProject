@@ -39,7 +39,7 @@ class _SurveillancePageState extends State<SurveillancePage> {
   }
 
   void _connectToWebSocket() {
-    String wsUrl = "ws://127.0.0.1:50645/ws/surveillance/${widget.sessionId}/";
+    String wsUrl = "ws://127.0.0.1:8000/ws/surveillance/${widget.sessionId}/";
 
     try {
       _channel = WebSocketChannel.connect(Uri.parse(wsUrl));

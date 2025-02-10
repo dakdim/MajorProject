@@ -26,8 +26,8 @@ class AddPage extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) => SurveillancePage(
-                        sessionId: "your_session_id", // Replace dynamically
-                        expectedOtp: "123456", // Replace with OTP from backend
+                        sessionId: "abcd1234xyz", // Replace dynamically
+                        expectedOtp: "654321", // Replace with OTP from backend
                       ),
                     ),
                   );
