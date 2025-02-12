@@ -15,7 +15,7 @@ class _LiveCameraPageState extends State<LiveCameraPage> {
   late CameraController _cameraController;
   late Future<void> _initializeControllerFuture;
   bool _isRecording = false;
-  String _otp = "Fetching OTP..."; // Default text before OTP is received
+  String _otp = ""; // Default text before OTP is received
   WebSocketChannel? _channel;
 
   @override
@@ -68,12 +68,14 @@ class _LiveCameraPageState extends State<LiveCameraPage> {
       _channel?.stream.listen(
         (message) {
           debugPrint("Received WebSocket message: $message");
+
           final data = jsonDecode(message);
 
           if (data["type"] == "otp") {
             setState(() {
               _otp = data["otp"];
             });
+            debugPrint("Updated OTP on UI: $_otp");
           }
         },
         onError: (error) {
@@ -84,7 +86,7 @@ class _LiveCameraPageState extends State<LiveCameraPage> {
         },
       );
 
-      // Send the OTP request **AFTER** ensuring the connection is open
+      // Request OTP from backend after connection is established
       Future.delayed(Duration(seconds: 1), () {
         debugPrint("Requesting OTP from backend...");
         _channel?.sink.add(jsonEncode({"type": "get_otp"}));
