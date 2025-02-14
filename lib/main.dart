@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'view/home.dart'; // Import home.dart
+// import 'view/home.dart'; // Import home.dart
+import 'view/splash.dart';
 // import 'dart:ui';
 
 void main() {
@@ -17,7 +18,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const HomePage(), // Use myapp from home.dart as the home screen
+      home: SplashScreen(), // Use myapp from home.dart as the home screen
     );
   }
 }
