@@ -57,11 +57,7 @@ class AddPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add Options'),
-        centerTitle: true,
-        backgroundColor: const Color.fromRGBO(198, 160, 206, 1),
-      ),
+      appBar: AppBar(),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),

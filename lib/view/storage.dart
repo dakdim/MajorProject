@@ -20,10 +20,10 @@ class StoragePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Storage'),
-        centerTitle: true,
-        backgroundColor: const Color.fromRGBO(198, 160, 206, 1),
-      ),
+          // title: const Text('Storage'),
+          // centerTitle: true,
+          // backgroundColor: const Color.fromRGBO(198, 160, 206, 1),
+          ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

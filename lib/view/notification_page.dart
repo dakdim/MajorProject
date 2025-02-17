@@ -13,10 +13,10 @@ class NotificationPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Notifications'),
-        centerTitle: true,
-        backgroundColor: const Color.fromRGBO(198, 160, 206, 1),
-      ),
+          // title: const Text('Notifications'),
+          // centerTitle: true,
+          // backgroundColor: const Color.fromRGBO(198, 160, 206, 1),
+          ),
       body: notifications.isNotEmpty
           ? ListView.builder(
               itemCount: notifications.length,
