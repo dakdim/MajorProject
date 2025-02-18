@@ -12,41 +12,35 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<double> _iconAnimation;
-  late Animation<double> _textAnimation;
-  late Animation<double> _indicatorAnimation;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
+  bool showText = false;
 
   @override
   void initState() {
     super.initState();
 
-    // Initialize animation controller
     _controller = AnimationController(
-      duration: const Duration(seconds: 1),
+      duration: const Duration(seconds: 2),
       vsync: this,
     );
 
-    // Create animations with different delays
-    _iconAnimation = CurvedAnimation(
+    _fadeAnimation = CurvedAnimation(
       parent: _controller,
-      curve: const Interval(0.0, 0.5, curve: Curves.easeOut),
+      curve: Curves.easeInOut,
     );
 
-    _textAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.3, 0.8, curve: Curves.easeOut),
+    _scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.elasticOut),
     );
 
-    _indicatorAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.6, 1.0, curve: Curves.easeOut),
-    );
-
-    // Start the animation
     _controller.forward();
 
-    // Navigate to home page after delay
-    Timer(const Duration(seconds: 2), () {
+    Future.delayed(const Duration(seconds: 1), () {
+      setState(() => showText = true);
+    });
+
+    Timer(const Duration(seconds: 4), () {
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const HomePage()),
@@ -64,97 +58,98 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromRGBO(198, 160, 206, 1),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              const Color.fromRGBO(198, 160, 206, 1),
-              const Color.fromRGBO(198, 160, 206, 1).withOpacity(0.8),
-            ],
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          // Background gradient with glow effect
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFFC690CE), Color(0xFF8E44AD)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
           ),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Animated Icon
-              ScaleTransition(
-                scale: _iconAnimation,
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Icon(
-                    Icons.videocam,
-                    size: 100,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 30),
 
-              // Animated Text
-              FadeTransition(
-                opacity: _textAnimation,
-                child: SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0, 0.5),
-                    end: Offset.zero,
-                  ).animate(_textAnimation),
-                  child: const Column(
-                    children: [
-                      Text(
-                        'For The Better Future',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Security & Surveillance',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white70,
-                          letterSpacing: 1.1,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 40),
-
-              // Animated Progress Indicator
-              FadeTransition(
-                opacity: _indicatorAnimation,
-                child: Column(
-                  children: [
-                    const CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 3,
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      'Loading...',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.7),
-                        fontSize: 14,
-                      ),
+          // Animated Camera Icon
+          Center(
+            child: ScaleTransition(
+              scale: _scaleAnimation,
+              child: Container(
+                padding: const EdgeInsets.all(25),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.15),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.white.withOpacity(0.2),
+                      blurRadius: 20,
+                      spreadRadius: 5,
                     ),
                   ],
                 ),
+                child: const Icon(
+                  Icons.videocam_rounded,
+                  size: 100,
+                  color: Colors.white,
+                ),
               ),
-            ],
+            ),
           ),
-        ),
+
+          // Moving Text: Starts from bottom and stops just above the camera icon
+          AnimatedAlign(
+            duration: const Duration(seconds: 2),
+            curve: Curves.easeOut,
+            alignment: showText
+                ? Alignment(0.0, 0.4)
+                : Alignment(
+                    0.0, 1.0), // Moves from bottom to just above the icon
+            child: AnimatedOpacity(
+              opacity: showText ? 1 : 0,
+              duration: const Duration(seconds: 1),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'For The Better Future',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Security & Surveillance',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white.withOpacity(0.8),
+                      letterSpacing: 1.1,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Loading Indicator
+          Positioned(
+            bottom: 50,
+            left: 0,
+            right: 0,
+            child: Column(
+              children: [
+                const CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 3,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
